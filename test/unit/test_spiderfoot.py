@@ -74,15 +74,6 @@ class TestSpiderFoot(unittest.TestCase):
         sf.socksProxy = 'new socket'
         self.assertEqual('new socket', sf.socksProxy)
 
-    def test_refresh_tor_ident_should_return_none(self):
-        """
-        Test refreshTorIdent(self)
-        """
-        sf = SpiderFoot(self.default_options)
-
-        res = sf.refreshTorIdent()
-        self.assertEqual(None, res)
-
     def test_optValueToData_should_return_data_as_string(self):
         """
         Test optValueToData(self, val)
@@ -105,15 +96,6 @@ class TestSpiderFoot(unittest.TestCase):
             with self.subTest(invalid_type=invalid_type):
                 opt_data = sf.optValueToData(invalid_type)
                 self.assertEqual(opt_data, None)
-
-    def test_genScanInstanceId_should_return_a_string(self):
-        """
-        Test genScanInstanceId(self)
-        """
-        sf = SpiderFoot(dict())
-
-        scan_instance_id = sf.genScanInstanceId()
-        self.assertIsInstance(scan_instance_id, str)
 
     def test_dblog_invalid_dbh_should_raise(self):
         """

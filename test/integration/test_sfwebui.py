@@ -29,7 +29,6 @@ class TestSpiderFootWebUiRoutes(helper.CPWebCase):
             '_socks3port': '',
             '_socks4user': '',
             '_socks5pwd': '',
-            '_torctlport': 9051,
             '__logstdout': False
         }
 
@@ -79,7 +78,7 @@ class TestSpiderFootWebUiRoutes(helper.CPWebCase):
             '/static': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': 'static',
-                'tools.staticdir.root': sf.myPath()
+                'tools.staticdir.root': f"{sf.myPath()}/spiderfoot",
             }
         }
 
@@ -171,6 +170,7 @@ class TestSpiderFootWebUiRoutes(helper.CPWebCase):
     def test_scandelete_invalid_scan_id_returns_404(self):
         self.getPage("/scandelete?id=doesnotexist")
         self.assertStatus('404 Not Found')
+        self.assertInBody('Scan doesnotexist does not exist')
 
     @unittest.skip("todo")
     def test_savesettings(self):
@@ -207,28 +207,39 @@ class TestSpiderFootWebUiRoutes(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertInBody('[{"1": 1}]')
 
-    def test_startscan(self):
+    def test_startscan_invalid_scan_name_returns_error(self):
         self.getPage("/startscan?scanname=&scantarget=&modulelist=&typelist=&usecase=")
         self.assertStatus('200 OK')
-        self.assertInBody('Invalid request: scan name or target was not specified.')
+        self.assertInBody('Invalid request: scan name was not specified.')
 
-        self.getPage("/startscan?scanname=example-scan&scantarget=invalid-target&modulelist=&typelist=&usecase=")
+    def test_startscan_invalid_scan_target_returns_error(self):
+        self.getPage("/startscan?scanname=example-scan&scantarget=&modulelist=&typelist=&usecase=")
         self.assertStatus('200 OK')
-        self.assertInBody('Invalid request: no modules specified for scan.')
+        self.assertInBody('Invalid request: scan target was not specified.')
 
+    def test_startscan_unrecognized_scan_target_returns_error(self):
         self.getPage("/startscan?scanname=example-scan&scantarget=invalid-target&modulelist=doesnotexist&typelist=doesnotexist&usecase=doesnotexist")
         self.assertStatus('200 OK')
         self.assertInBody('Invalid target type. Could not recognize it as a target SpiderFoot supports.')
 
-    def test_stopscanmulti(self):
-        self.getPage("/stopscanmulti?ids=doesnotexist")
+    def test_startscan_invalid_modules_returns_error(self):
+        self.getPage("/startscan?scanname=example-scan&scantarget=spiderfoot.net&modulelist=&typelist=&usecase=")
         self.assertStatus('200 OK')
-        self.assertInBody('Invalid scan ID.')
+        self.assertInBody('Invalid request: no modules specified for scan.')
 
-    def test_stopscan(self):
-        self.getPage("/stopscan?id=doesnotexist")
+    def test_startscan_invalid_typelist_returns_error(self):
+        self.getPage("/startscan?scanname=example-scan&scantarget=spiderfoot.net&modulelist=&typelist=doesnotexist&usecase=")
         self.assertStatus('200 OK')
-        self.assertInBody('Invalid scan ID.')
+        self.assertInBody('Invalid request: no modules specified for scan.')
+
+    def test_startscan_should_start_a_scan(self):
+        self.getPage("/startscan?scanname=spiderfoot.net&scantarget=spiderfoot.net&modulelist=doesnotexist&typelist=doesnotexist&usecase=doesnotexist")
+        self.assertStatus('303 See Other')
+
+    def test_stopscan_invalid_scan_id_returns_404(self):
+        self.getPage("/stopscan?id=doesnotexist")
+        self.assertStatus('404 Not Found')
+        self.assertInBody('Scan doesnotexist does not exist')
 
     def test_scanlog_invalid_scan_returns_200(self):
         self.getPage("/scanlog?id=doesnotexist")
